@@ -13,42 +13,34 @@ from grafica.assets_path import getAssetPath
 class Controller:
     def __init__(self):
         self.camType = 0
-        self.position = np.array([0, 0, 0])
-        self.theta = 0
-        self.phi = 0
-        self.front = np.array([0, 1,0])
-    def derecha(self):
-        self.phi = self.phi + np.pi/100
-        self.front = np.array([
-            np.sin(self.phi),
-            np.cos(self.phi),
-            np.sin(self.theta)
-        ])
-    def izquierda(self):
-        self.phi = self.phi - np.pi/100
-        self.front = np.array([
-            np.sin(self.phi),
-            np.cos(self.phi),
-            np.sin(self.theta)
-        ])
-    def arriba(self):
-        self.theta = self.theta + np.pi/100
-        self.front = np.array([
-            np.sin(self.phi),
-            np.cos(self.phi),
-            np.sin(self.theta)
-        ]) 
-    def abajo(self):
-        self.theta = self.theta - np.pi/100
-        self.front = np.array([
-            np.sin(self.phi),
-            np.cos(self.phi),
-            np.sin(self.theta)
-        ])
-
+        self.camPosition = np.array([0, 0.2, 4.0])
+        self.pitch = 0.0
+        self.yaw = -np.pi/2
+        self.camUp = np.array([0.0,1.0,1.0])
+        self.camRight = np.array([0,0,0])
+        self.front = np.array([0,0,0])
 
 #iniciamos el controlador
 controller = Controller()
+
+#manejo de camara
+def processCamera():
+    global controller
+    if controller.camType == 0:
+        yaw = controller.yaw
+        pitch = controller.pitch
+
+        frontx = np.cos(yaw) * np.cos(pitch)
+        fronty = np.sin(pitch)
+        frontz = np.sin(yaw) * np.cos(pitch)
+        controller.front = np.array([frontx, fronty, frontz])
+        controller.front = controller.front / np.linalg.norm(controller.front)
+
+        controller.camRight = np.cross(controller.front, controller.camUp)
+        controller.camRight = controller.camRight / np.linalg.norm(controller.camRight)
+
+        controller.camUp = np.cross(controller.camRight, controller.front)
+        controller.camUp = controller.camUp / np.linalg.norm(controller.camUp)
 
 # funcion para facilitar inicialización
 def createGPUShape(shape, pipeline):
@@ -253,7 +245,7 @@ def createStars(pipeline):
 def createFighter(pipeline):
     corvetteShape = createGPUShape(bs.readOFF(getAssetPath('Costum_Corvette.off'), (0.3 , 0.3 ,0.3)), pipeline)
     fromSPShape = createGPUShape(bs.readOFF(getAssetPath('FromSP.off'), (0.3 , 0.3 ,0.3)), pipeline)
-    destroyerShape = createGPUShape(bs.readOFF(getAssetPath('Imperial_star_destroyer.off'), (0.5 , 0.5 ,0.5)), pipeline)
+    destroyerShape = createGPUShape(bs.readOFF(getAssetPath('Imperial_star_destroyer.off'), (0.3 , 0.3 ,0.3)), pipeline)
     kontosShape = createGPUShape(bs.readOFF(getAssetPath('Kontos.off'), (0.3 , 0.3 ,0.3)), pipeline)
     nabooFighterShape = createGPUShape(bs.readOFF(getAssetPath('NabooFighter.off'), (0.3 , 0.3 ,0.3)), pipeline)
     tieUVShape = createGPUShape(bs.readOFF(getAssetPath('tie_UV.off'), (0.3 , 0.3 ,0.3)), pipeline)
@@ -264,60 +256,8 @@ def createFighter(pipeline):
     corvetteNode.transform = tr.uniformScale(1)
     corvetteNode.childs += [corvetteShape]
 
-    destroyerNode = sg.SceneGraphNode("destroyerNode")
-    destroyerNode.transform = tr.matmul([
-        tr.rotationX(np.pi/2),
-        tr.uniformScale(0.05)
-    ])
-    destroyerNode.childs += [destroyerShape]
-
-    tieUVNode = sg.SceneGraphNode("tieUVNode")
-    tieUVNode.transform = tr.matmul([
-        tr.rotationX(np.pi/2),
-        tr.uniformScale(0.005)
-    ])
-    tieUVNode.childs += [tieUVShape]
-    tieUVTraslation = sg.SceneGraphNode("tieUVTraslation")
-    tieUVTraslation.transform = tr.translate(0.03, 0, 0)
-    tieUVTraslation.childs += [tieUVNode]
-
-    tieUVRotation = sg.SceneGraphNode("tieUVRotation")
-    tieUVRotation.transform = tr.rotationZ(0)
-    tieUVRotation.childs += [tieUVTraslation]
-
-
-    xWingNode = sg.SceneGraphNode("xWingNode")
-    xWingNode.transform = tr.matmul([
-        tr.rotationX(np.pi/2),
-        tr.uniformScale(0.005)
-    ])
-    xWingNode.childs += [xWingShape]
-
-    destroyer1 = sg.SceneGraphNode("destroyer1")
-    destroyer1.transform = tr.identity()
-    destroyer1.childs += [destroyerNode, tieUVRotation]
-    destroyer2 = sg.SceneGraphNode("destroyer2")
-    destroyer2.transform = tr.matmul([
-        tr.translate(-0.05, -0.02, -0.02)
-    ])
-    destroyer2.childs += [destroyerNode, tieUVRotation]
-    destroyer3 = sg.SceneGraphNode("destroyer3")
-    destroyer3.transform = tr.matmul([
-        tr.translate(0.05, -0.02, -0.02)
-    ])
-    destroyer3.childs += [destroyerNode, tieUVRotation]
-
-    convoy = sg.SceneGraphNode("convoy")
-    convoy.transform = tr.identity()
-    convoy.childs += [destroyer1, destroyer2, destroyer3]
-
-
-    usuario =sg.SceneGraphNode("usuario")
-    usuario.transform = tr.identity()
-    usuario.childs += [xWingNode]
-
     sceneNode = sg.SceneGraphNode("naves")
-    sceneNode.childs += [usuario, convoy]
+    sceneNode.childs += [corvetteNode]
 
     return sceneNode
 
@@ -329,8 +269,32 @@ def on_key(window, key, scancode, action, mods):
     
     global controller
 
+    
+    if key == glfw.KEY_SPACE:
+        controller.camPosition = controller.camPosition + controller.front*0.0175
+    elif key == glfw.KEY_W:
+        if controller.pitch >= np.pi:
+            controller.pitch = -np.pi + 0.061
+        else:
+            controller.pitch = controller.pitch + 0.061
+    elif key == glfw.KEY_S:
+        if controller.pitch <= -np.pi:
+            controller.pitch = np.pi - 0.061
+        else:
+            controller.pitch = controller.pitch - 0.061
+    elif key == glfw.KEY_D:
+        if controller.yaw >= np.pi:
+            controller.yaw = -np.pi + 0.061
+        else:
+            controller.yaw = controller.yaw + 0.061
+    
+    elif key == glfw.KEY_A:
+        if controller.yaw <= -np.pi:
+            controller.yaw = np.pi - 0.061
+        else:
+            controller.yaw = controller.yaw - 0.061
     #Cierra la aplicación con escape
-    if key == glfw.KEY_ESCAPE:
+    elif key == glfw.KEY_ESCAPE:
         glfw.set_window_should_close(window, True)
 
 
@@ -374,7 +338,7 @@ def main():
     #Quitar luego
     #Camara
     camera_theta = np.pi/4
-    cam_radius = 0.15
+    cam_radius = 10
     cam_x = cam_radius * np.sin(camera_theta)
     cam_y = cam_radius * np.cos(camera_theta)
     cam_z = cam_radius/2
@@ -388,6 +352,8 @@ def main():
     sistemaSolar = createSystem(MVPpipeline)
     fondo = createStars(MVPpipeline)
     figther = createFighter(pipeline)
+    nave = createGPUShape(bs.readOFF(getAssetPath('XJ5 X-wing starfighter.off'), (0.9 , 0.9 ,0.9)), pipeline)
+
 
 
     glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "La"), 1.0, 1.0, 1.0)
@@ -414,27 +380,14 @@ def main():
         #contador de tiempo
         time = 100 * glfw.get_time()
 
-        #iputs nave usuario
         global controller
-        if controller.camType == 0:
-            if glfw.get_key(window,glfw.KEY_SPACE) == glfw.PRESS:
-                if glfw.get_key(window,glfw.KEY_D) == glfw.PRESS:
-                    controller.derecha()
-                elif glfw.get_key(window,glfw.KEY_A) == glfw.PRESS:
-                    controller.izquierda()
-                if glfw.get_key(window,glfw.KEY_W) == glfw.PRESS:
-                    controller.arriba()
-                elif glfw.get_key(window,glfw.KEY_S) == glfw.PRESS:
-                    controller.abajo()
-                
-                controller.position = controller.position +controller.front*0.0005
+        processCamera()
+        if glfw.get_key(window, glfw.KEY_SPACE) == glfw.PRESS:
+            controller.camPosition = controller.camPosition + controller.front*0.005
 
-
-        view = tr.lookAt(
-            controller.position- controller.front*0.01,
-            controller.position,
-            np.array([0, 0, 1])
-        )
+        view = tr.lookAt(controller.camPosition, 
+        controller.camPosition+controller.front,
+        controller.camUp)
 
         #View y proyeccion
         glUseProgram(pipeline.shaderProgram)
@@ -455,25 +408,23 @@ def main():
 
         
         glUseProgram(pipeline.shaderProgram)
+        #Nave controlada por usuario
+        #Falta que la nave apunte siempre hacia adelante
+        naveTransform = tr.matmul([
+            tr.translate(
+                controller.camPosition[0] +controller.front[0]/500,
+                controller.camPosition[1]+controller.front[1]/500 - 0.0005,
+                controller.camPosition[2]+controller.front[2]/500),
+            tr.rotationX(controller.pitch ),
+            tr.rotationY(-controller.yaw - np.pi/2),
+            #tr.rotationZ(controller.pitch * np.sin(controller.yaw)),
+            tr.uniformScale(0.001)
+        ])
+        glUniformMatrix4fv(glGetUniformLocation(pipeline.shaderProgram, "model"), 1, GL_TRUE, naveTransform)
+        pipeline.drawCall(nave)
+
         #Naves
         sg.drawSceneGraphNode(figther, pipeline, "model")
-
-        #nave usuario
-        usuarioNave = sg.findNode(figther, "usuario")
-        usuarioNave.transform = tr.matmul([
-            tr.translate(
-                controller.position[0],
-                controller.position[1],
-                controller.position[2],
-            ),
-            tr.rotationZ(-controller.phi),
-            tr.rotationX(controller.theta)
-        ])
-        
-        
-
-        tieRotation = sg.findNode(figther, "tieUVRotation")
-        tieRotation.transform = tr.rotationZ(time/100)
 
 
         glUseProgram(MVPpipeline.shaderProgram)
@@ -599,7 +550,7 @@ def main():
 
 
 
-        #sg.drawSceneGraphNode(sistemaSolar, MVPpipeline, "model")
+        sg.drawSceneGraphNode(sistemaSolar, MVPpipeline, "model")
         sg.drawSceneGraphNode(fondo, MVPpipeline, "model")
         
 
