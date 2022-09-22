@@ -13,38 +13,54 @@ from grafica.assets_path import getAssetPath
 class Controller:
     def __init__(self):
         self.camType = 0
-        self.position = np.array([0, 0, 0])
+        self.position = np.array([0, -1, 0.1])
         self.theta = 0
         self.phi = 0
-        self.front = np.array([0, 1,0])
+        self.front = np.array([0, 1, 0])
+        #doblar  toma valores -1 (izquierda), 0, 1 (derecha)
+        self.doblar = 0
+        self.view = tr.lookAt(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 1]))
+
     def derecha(self):
+        self.doblar = 1
         self.phi = self.phi + np.pi/100
         self.front = np.array([
-            np.sin(self.phi),
-            np.cos(self.phi),
+            np.sin(self.phi)*np.cos(self.theta),
+            np.cos(self.phi)*np.cos(self.theta),
             np.sin(self.theta)
         ])
     def izquierda(self):
+        self.doblar = -1
         self.phi = self.phi - np.pi/100
         self.front = np.array([
-            np.sin(self.phi),
-            np.cos(self.phi),
+            np.sin(self.phi)*np.cos(self.theta),
+            np.cos(self.phi)*np.cos(self.theta),
             np.sin(self.theta)
         ])
     def arriba(self):
-        self.theta = self.theta + np.pi/100
-        self.front = np.array([
-            np.sin(self.phi),
-            np.cos(self.phi),
-            np.sin(self.theta)
-        ]) 
+        if self.theta <= np.pi/4:
+            self.theta = self.theta + np.pi/100
+            self.front = np.array([
+                np.sin(self.phi)*np.cos(self.theta),
+                np.cos(self.phi)*np.cos(self.theta),
+                np.sin(self.theta)
+            ]) 
     def abajo(self):
-        self.theta = self.theta - np.pi/100
-        self.front = np.array([
-            np.sin(self.phi),
-            np.cos(self.phi),
-            np.sin(self.theta)
-        ])
+        if self.theta >= -np.pi/4:
+            self.theta = self.theta - np.pi/100
+            self.front = np.array([
+                np.sin(self.phi)*np.cos(self.theta),
+                np.cos(self.phi)*np.cos(self.theta),
+                np.sin(self.theta)
+            ])
+    def camera(self, time):
+        if self.camType == 0:
+            self.view = tr.lookAt(
+            controller.position - controller.front*0.01 + np.array([0, 0, 0.001]),
+            controller.position + np.array([0, 0, 0.001]),
+            np.array([0, 0, 1])
+        )
+        return self.view
 
 
 #iniciamos el controlador
@@ -370,16 +386,6 @@ def main():
     # and which one is at the back
     glEnable(GL_DEPTH_TEST)
 
-
-    #Quitar luego
-    #Camara
-    camera_theta = np.pi/4
-    cam_radius = 0.15
-    cam_x = cam_radius * np.sin(camera_theta)
-    cam_y = cam_radius * np.cos(camera_theta)
-    cam_z = cam_radius/2
-    viewPos = np.array([cam_x, cam_y, cam_z])
-    view = tr.lookAt(viewPos, np.array([0, 0, 0]),np.array([0, 0, 1]))
     #Proyeccion
     proyeccion = tr.perspective(60, float(1500)/float(1000), 0.001, 200)
 
@@ -412,7 +418,7 @@ def main():
         glfw.poll_events()
 
         #contador de tiempo
-        time = 100 * glfw.get_time()
+        time = 10 * glfw.get_time()
 
         #iputs nave usuario
         global controller
@@ -426,15 +432,13 @@ def main():
                     controller.arriba()
                 elif glfw.get_key(window,glfw.KEY_S) == glfw.PRESS:
                     controller.abajo()
-                
-                controller.position = controller.position +controller.front*0.0005
+                if glfw.get_key(window,glfw.KEY_LEFT_SHIFT) == glfw.PRESS:
+                    controller.position = controller.position +controller.front*0.005
+                else:
+                    controller.position = controller.position +controller.front*0.0005
 
 
-        view = tr.lookAt(
-            controller.position- controller.front*0.01,
-            controller.position,
-            np.array([0, 0, 1])
-        )
+        view = controller.camera(time)
 
         #View y proyeccion
         glUseProgram(pipeline.shaderProgram)
@@ -456,24 +460,92 @@ def main():
         
         glUseProgram(pipeline.shaderProgram)
         #Naves
+
+        convoy = sg.findNode(figther, "convoy")
+        destroyer1 = sg.findNode(figther, "destroyer1")
+        destroyer2 = sg.findNode(figther, "destroyer2")
+        destroyer3 = sg.findNode(figther, "destroyer3")
+        tieRotation = sg.findNode(figther, "tieUVRotation")
+        tieRotation.transform = tr.rotationZ(time/10)
+        if time%1600<200:
+            convoy.transform = tr.translate(1, -(time%1600)/100, 0)
+        elif time%1600<800:
+            convoy.transform = tr.matmul([
+                tr.translate(np.cos(np.pi*((time%1600)-200)/600), -2-np.sin(np.pi*((time%1600)-200)/600), 0),
+                tr.rotationZ(-np.pi*((time%1600)-200)/600)
+            ])
+            destroyer1.transform = tr.rotationY(-np.pi/16)
+            destroyer2.transform = tr.matmul([
+                tr.translate(-0.05, -0.02, -0.02),
+                tr.rotationY(-np.pi/16)
+            ])
+            destroyer3.transform = tr.matmul([
+                tr.translate(0.05, -0.02, -0.02),
+                tr.rotationY(-np.pi/16)
+            ])
+        elif time%1600<1000:
+            convoy.transform = tr.matmul([
+                tr.translate(-1, (time%1600-800)/100 - 2, 0),
+                tr.rotationZ(-np.pi)
+            ])
+        else:
+            convoy.transform = tr.matmul([
+                tr.translate(-np.cos(np.pi*((time%1600)-999)/600), np.sin(np.pi*((time%1600)-999)/600), 0),
+                tr.rotationZ(-np.pi-np.pi*((time%1600)-999)/600)
+            ])
+            destroyer1.transform = tr.rotationY(-np.pi/16)
+            destroyer2.transform = tr.matmul([
+                tr.translate(-0.05, -0.02, -0.02),
+                tr.rotationY(-np.pi/16)
+            ])
+            destroyer3.transform = tr.matmul([
+                tr.translate(0.05, -0.02, -0.02),
+                tr.rotationY(-np.pi/16)
+            ])
+
+
         sg.drawSceneGraphNode(figther, pipeline, "model")
 
         #nave usuario
         usuarioNave = sg.findNode(figther, "usuario")
-        usuarioNave.transform = tr.matmul([
-            tr.translate(
-                controller.position[0],
-                controller.position[1],
-                controller.position[2],
-            ),
-            tr.rotationZ(-controller.phi),
-            tr.rotationX(controller.theta)
-        ])
-        
-        
+        if controller.doblar == 0:
+            usuarioNave.transform = tr.matmul([
+                tr.translate(
+                    controller.position[0],
+                    controller.position[1],
+                    controller.position[2],
+                ),
+                tr.rotationZ(-controller.phi),
+                tr.rotationX(controller.theta),
+            ])
+        #doblar derecha
+        elif controller.doblar == 1:
+            usuarioNave.transform = tr.matmul([
+                tr.translate(
+                    controller.position[0],
+                    controller.position[1],
+                    controller.position[2],
+                ),
+                tr.rotationZ(-controller.phi),
+                tr.rotationX(controller.theta),
+                tr.rotationY(np.pi/8)
+            ])
+            controller.doblar = 0
+        #doblar izquierda
+        else:
+            usuarioNave.transform = tr.matmul([
+                tr.translate(
+                    controller.position[0],
+                    controller.position[1],
+                    controller.position[2],
+                ),
+                tr.rotationZ(-controller.phi),
+                tr.rotationX(controller.theta),
+                tr.rotationY(-np.pi/8)
+            ])
+            controller.doblar = 0
 
-        tieRotation = sg.findNode(figther, "tieUVRotation")
-        tieRotation.transform = tr.rotationZ(time/100)
+       
 
 
         glUseProgram(MVPpipeline.shaderProgram)
@@ -602,11 +674,6 @@ def main():
         #sg.drawSceneGraphNode(sistemaSolar, MVPpipeline, "model")
         sg.drawSceneGraphNode(fondo, MVPpipeline, "model")
         
-
-
-
-
-
 
 
         # Once the drawing is rendered, buffers are swap so an uncomplete drawing is never seen.
