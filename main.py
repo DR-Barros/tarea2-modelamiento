@@ -22,7 +22,11 @@ class Controller:
         self.view = tr.lookAt(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 1]))
     def derecha(self):
         self.doblar = 1
-        self.phi = self.phi + np.pi/100
+        """ if self.theta < np.pi/2 or self.theta > -np.pi/2:
+            self.phi = self.phi + np.pi/100
+        else:
+            self.phi = self.phi - np.pi/100 """
+        self.phi = self.phi + np.pi/100 *np.cos(self.theta)/abs(np.cos(self.theta))
         self.front = np.array([
             np.sin(self.phi)*np.cos(self.theta),
             np.cos(self.phi)*np.cos(self.theta),
@@ -30,34 +34,41 @@ class Controller:
         ])
     def izquierda(self):
         self.doblar = -1
-        self.phi = self.phi - np.pi/100
+        """ if self.theta < np.pi/2 or self.theta > -np.pi/2:
+            self.phi = self.phi - np.pi/100
+        else:
+            self.phi = self.phi + np.pi/100 """
+        self.phi = self.phi - np.pi/100 * np.cos(self.theta)/abs(np.cos(self.theta))
         self.front = np.array([
             np.sin(self.phi)*np.cos(self.theta),
             np.cos(self.phi)*np.cos(self.theta),
             np.sin(self.theta)
         ])
     def arriba(self):
-        if self.theta <= np.pi/2-0.1:
-            self.theta = self.theta + np.pi/100
-            self.front = np.array([
-                np.sin(self.phi)*np.cos(self.theta),
-                np.cos(self.phi)*np.cos(self.theta),
-                np.sin(self.theta)
-            ]) 
+        self.theta = self.theta + 0.03
+        self.front = np.array([
+            np.sin(self.phi)*np.cos(self.theta),
+            np.cos(self.phi)*np.cos(self.theta),
+            np.sin(self.theta)
+        ])
+        if self.theta > 2*np.pi:
+            self.theta = 0 
     def abajo(self):
-        if self.theta >= -np.pi/2+0.1:
-            self.theta = self.theta - np.pi/100
-            self.front = np.array([
-                np.sin(self.phi)*np.cos(self.theta),
-                np.cos(self.phi)*np.cos(self.theta),
-                np.sin(self.theta)
-            ])
+        self.theta = self.theta - 0.03
+        self.front = np.array([
+            np.sin(self.phi)*np.cos(self.theta),
+            np.cos(self.phi)*np.cos(self.theta),
+            np.sin(self.theta)
+        ])
+        if self.theta < 0:
+            self.theta = 2*np.pi
     def camera(self, time):
         if self.camType == 0:
+            up = np.array([0, 0, np.cos(self.theta)])
             self.view = tr.lookAt(
-                controller.position - controller.front*0.01 + np.array([0, 0, 0.001]),
-                controller.position + np.array([0, 0, 0.001]),
-                np.array([0, 0, 1])
+                controller.position - controller.front*0.01 + np.array([0, 0, 0.001*np.cos(self.theta)]),
+                controller.position + np.array([0, 0, 0.001*np.cos(self.theta)]),
+                up/np.linalg.norm(up)
             )
         elif self.camType == 1:
             cX = 4
