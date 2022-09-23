@@ -26,7 +26,7 @@ class Controller:
             self.phi = self.phi + np.pi/100
         else:
             self.phi = self.phi - np.pi/100 """
-        self.phi = self.phi + np.pi/100 *np.cos(self.theta)
+        self.phi = self.phi + np.pi/100 *np.cos(self.theta)/abs(np.cos(self.theta))
         self.front = np.array([
             np.sin(self.phi)*np.cos(self.theta),
             np.cos(self.phi)*np.cos(self.theta),
@@ -38,7 +38,7 @@ class Controller:
             self.phi = self.phi - np.pi/100
         else:
             self.phi = self.phi + np.pi/100 """
-        self.phi = self.phi - np.pi/100 * np.cos(self.theta)
+        self.phi = self.phi - np.pi/100 * np.cos(self.theta)/abs(np.cos(self.theta))
         self.front = np.array([
             np.sin(self.phi)*np.cos(self.theta),
             np.cos(self.phi)*np.cos(self.theta),
@@ -70,7 +70,6 @@ class Controller:
                 controller.position + np.array([0, 0, 0.001*np.cos(self.theta)]),
                 up/np.linalg.norm(up)
             )
-            print(self.theta)
         elif self.camType == 1:
             cX = 4
             cY = cX*2 
