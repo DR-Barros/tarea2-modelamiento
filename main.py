@@ -159,69 +159,69 @@ def createSystem(pipeline):
     cometaShape = createGPUShape(crearEsfera(100, 136/255, 9/255, 123/255), pipeline)
 
     solNode = sg.SceneGraphNode("solNode")
-    solNode.transform = tr.uniformScale(0.5)
+    solNode.transform = tr.uniformScale(1)
     solNode.childs += [solShape]
 
     mercurioNode = sg.SceneGraphNode("mercurioNode")
-    mercurioNode.transform = tr.uniformScale(0.05)
+    mercurioNode.transform = tr.uniformScale(0.1)
     mercurioNode.childs += [mercurioShape]
     mercurioTranslation = sg.SceneGraphNode("mercurioTranslation")
-    mercurioTranslation.transform = tr.translate(-1, 0, 0)
+    mercurioTranslation.transform = tr.translate(-1.5, 0, 0)
     mercurioTranslation.childs += [mercurioNode]
 
     venusNode = sg.SceneGraphNode("venusNode")
-    venusNode.transform = tr.uniformScale(0.1)
+    venusNode.transform = tr.uniformScale(0.2)
     venusNode.childs += [venusShape]
     venusTranslation = sg.SceneGraphNode("venusTranslation")
-    venusTranslation.transform = tr.translate(-1.8, 0, 0)
+    venusTranslation.transform = tr.translate(-2.2, 0, 0)
     venusTranslation.childs += [venusNode]
 
     tierraNode = sg.SceneGraphNode("tierraNode")
-    tierraNode.transform = tr.uniformScale(0.11)
+    tierraNode.transform = tr.uniformScale(0.22)
     tierraNode.childs += [tierraShape]
     lunaNode = sg.SceneGraphNode("lunaNode")
-    lunaNode.transform = tr.uniformScale(0.04)
+    lunaNode.transform = tr.uniformScale(0.08)
     lunaNode.childs += [lunaShape]
     lunaTranslation = sg.SceneGraphNode("lunaTranslation")
-    lunaTranslation.transform = tr.translate(0.25, 0, 0)
+    lunaTranslation.transform = tr.translate(0.5, 0, 0)
     lunaTranslation.childs += [lunaNode]
     sistemaTierraLuna = sg.SceneGraphNode("sistemaTierraLuna")
-    sistemaTierraLuna.transform = tr.translate(-2.5, 0, 0)
+    sistemaTierraLuna.transform = tr.translate(-3, 0, 0)
     sistemaTierraLuna.childs += [tierraNode, lunaTranslation]
 
     marteNode = sg.SceneGraphNode("marteNode")
-    marteNode.transform = tr.uniformScale(0.1)
+    marteNode.transform = tr.uniformScale(0.2)
     marteNode.childs += [marteShape]
     marteTranslation = sg.SceneGraphNode("marteTranslation")
-    marteTranslation.transform = tr.translate(-3.8, 0, 0)
+    marteTranslation.transform = tr.translate(-4.5, 0, 0)
     marteTranslation.childs += [marteNode]
 
     jupiterNode = sg.SceneGraphNode("jupiterNode")
-    jupiterNode.transform = tr.uniformScale(0.26)
+    jupiterNode.transform = tr.uniformScale(0.52)
     jupiterNode.childs += [jupiterShape]
     jupiterTranslation = sg.SceneGraphNode("jupiterTranslation")
     jupiterTranslation.transform = tr.translate(-13, 0, 0)
     jupiterTranslation.childs += [jupiterNode]
 
     saturnoNode =sg.SceneGraphNode("saturnoNode")
-    saturnoNode.transform = tr.uniformScale(0.25)
+    saturnoNode.transform = tr.uniformScale(0.50)
     saturnoNode.childs += [saturnoShape]
     anillo1Node = sg.SceneGraphNode("anillo1Node")
     anillo1Node.transform = tr.matmul([
         tr.rotationX(0.1 * np.pi),
-        tr.uniformScale(0.27)
+        tr.uniformScale(0.54)
     ])
     anillo1Node.childs += [anillo1Shape]
     anillo2Node = sg.SceneGraphNode("anillo2Node")
     anillo2Node.transform = tr.matmul([
         tr.rotationX(0.1 * np.pi),
-        tr.uniformScale(0.27)
+        tr.uniformScale(0.54)
     ])
     anillo2Node.childs += [anillo2Shape]
     anillo3Node = sg.SceneGraphNode("anillo3Node")
     anillo3Node.transform = tr.matmul([
         tr.rotationX(0.1 * np.pi),
-        tr.uniformScale(0.27)
+        tr.uniformScale(0.54)
     ])
     anillo3Node.childs += [anillo3Shape]
     sistemaSaturno = sg.SceneGraphNode("sistemaSaturno")
@@ -229,21 +229,21 @@ def createSystem(pipeline):
     sistemaSaturno.childs += [saturnoNode, anillo1Node, anillo2Node, anillo3Node]
 
     uranoNode = sg.SceneGraphNode("uranoNode")
-    uranoNode.transform = tr.uniformScale(0.2)
+    uranoNode.transform = tr.uniformScale(0.4)
     uranoNode.childs += [uranoShape]
     uranoTranslation = sg.SceneGraphNode("uranoTranslation")
     uranoTranslation.transform = tr.translate(-48.7, 0, 0)
     uranoTranslation.childs += [uranoNode]
 
     neptunoNode = sg.SceneGraphNode("neptunoNode")
-    neptunoNode.transform = tr.uniformScale(0.2)
+    neptunoNode.transform = tr.uniformScale(0.4)
     neptunoNode.childs += [neptunoShape]
     neptunoTranslation = sg.SceneGraphNode("neptunoTranslation")
     neptunoTranslation.transform = tr.translate(-75.1, 0, 0)
     neptunoTranslation.childs += [neptunoNode]
 
     plutonNode = sg.SceneGraphNode("plutonNode")
-    plutonNode.transform = tr.uniformScale(0.04)
+    plutonNode.transform = tr.uniformScale(0.08)
     plutonNode.childs += [plutonShape]
     plutonTranslation = sg.SceneGraphNode("plutonTranslation")
     plutonTranslation.transform = tr.translate(-98.6, 0, 0)
@@ -296,7 +296,6 @@ def createStars(pipeline):
 
     return sceneNode
 
-
 #Crear batalla de naves scene graph
 def createFighter(pipeline):
     corvetteShape = createGPUShape(bs.readOFF(getAssetPath('Costum_Corvette.off'), (0.3 , 0.3 ,0.3)), pipeline)
@@ -308,8 +307,13 @@ def createFighter(pipeline):
     triFigtherShape = createGPUShape(bs.readOFF(getAssetPath('Tri_Fighter.off'), (0.3 , 0.3 ,0.3)), pipeline)
     xWingShape = createGPUShape(bs.readOFF(getAssetPath('XJ5 X-wing starfighter.off'), (0.9 , 0.9 ,0.9)), pipeline)
 
+    #Crear nodos por cada shape, con la escala de las naves
+
     corvetteNode = sg.SceneGraphNode("corvetteNode")
-    corvetteNode.transform = tr.uniformScale(1)
+    corvetteNode.transform = tr.matmul([
+        tr.rotationX(np.pi/2),
+        tr.uniformScale(0.05)
+    ])
     corvetteNode.childs += [corvetteShape]
 
     destroyerNode = sg.SceneGraphNode("destroyerNode")
@@ -325,13 +329,21 @@ def createFighter(pipeline):
         tr.uniformScale(0.005)
     ])
     tieUVNode.childs += [tieUVShape]
-    tieUVTraslation = sg.SceneGraphNode("tieUVTraslation")
-    tieUVTraslation.transform = tr.translate(0.03, 0, 0)
-    tieUVTraslation.childs += [tieUVNode]
+    
+    kontosNode = sg.SceneGraphNode("kontosNode")
+    kontosNode.transform = tr.matmul([
+        tr.rotationX(np.pi/2),
+        tr.uniformScale(0.05)
+    ])
+    kontosNode.childs += [kontosShape]
 
-    tieUVRotation = sg.SceneGraphNode("tieUVRotation")
-    tieUVRotation.transform = tr.rotationZ(0)
-    tieUVRotation.childs += [tieUVTraslation]
+    nabooNode = sg.SceneGraphNode("nabooNode")
+    nabooNode.transform = tr.matmul([
+        tr.rotationX(np.pi/2),
+        tr.uniformScale(0.005)
+    ])
+    nabooNode.childs += [nabooFighterShape]
+    
 
 
     xWingNode = sg.SceneGraphNode("xWingNode")
@@ -341,31 +353,45 @@ def createFighter(pipeline):
     ])
     xWingNode.childs += [xWingShape]
 
+    #Rotacion de naves 
+
+    #Tie
+    tieUVTraslation = sg.SceneGraphNode("tieUVTraslation")
+    tieUVTraslation.transform = tr.translate(0.03, 0, 0)
+    tieUVTraslation.childs += [tieUVNode]
+
+    tieUVRotation = sg.SceneGraphNode("tieUVRotation")
+    tieUVRotation.transform = tr.rotationZ(0)
+    tieUVRotation.childs += [tieUVTraslation]
+
+
+    #crear destructores con un Tie rotando al rededor
     destroyer1 = sg.SceneGraphNode("destroyer1")
     destroyer1.transform = tr.identity()
     destroyer1.childs += [destroyerNode, tieUVRotation]
+
     destroyer2 = sg.SceneGraphNode("destroyer2")
-    destroyer2.transform = tr.matmul([
-        tr.translate(-0.05, -0.02, -0.02)
-    ])
+    destroyer2.transform = tr.translate(-0.05, -0.02, -0.02)
     destroyer2.childs += [destroyerNode, tieUVRotation]
+
     destroyer3 = sg.SceneGraphNode("destroyer3")
-    destroyer3.transform = tr.matmul([
-        tr.translate(0.05, -0.02, -0.02)
-    ])
+    destroyer3.transform = tr.translate(0.05, -0.02, -0.02)
     destroyer3.childs += [destroyerNode, tieUVRotation]
 
     convoy = sg.SceneGraphNode("convoy")
     convoy.transform = tr.identity()
     convoy.childs += [destroyer1, destroyer2, destroyer3]
 
+    tierraConvoy = sg.SceneGraphNode("tierraConvoy")
+    tierraConvoy.transform = tr.identity()
+    tierraConvoy.childs += [destroyer1, destroyer2, destroyer3]
 
     usuario =sg.SceneGraphNode("usuario")
     usuario.transform = tr.identity()
     usuario.childs += [xWingNode]
 
     sceneNode = sg.SceneGraphNode("naves")
-    sceneNode.childs += [usuario, convoy]
+    sceneNode.childs += [usuario, convoy, kontosNode]
 
     return sceneNode
 
@@ -384,7 +410,6 @@ def on_key(window, key, scancode, action, mods):
         controller.camType = 1
     if key == glfw.KEY_ESCAPE:
         glfw.set_window_should_close(window, True)
-
 
 
 def main():
@@ -520,8 +545,7 @@ def main():
             destroyer3.transform = tr.matmul([
                 tr.translate(0.05, -0.02, -0.02),
                 tr.rotationY(-np.pi/16)
-            ])
-            
+            ])    
         elif time%1600<1000:
             convoy.transform = tr.matmul([
                 tr.translate(-cX, 2-cY +cY*(time%1600-800)/200, 2),
@@ -593,73 +617,71 @@ def main():
 
 
         #Sistema Solar
-        sistema = sg.findNode(sistemaSolar, "sistemaSolar")
-        sistema.transform = tr.uniformScale(2)
         sol = sg.findNode(sistemaSolar, "solNode")
         sol.transform = tr.matmul([
             tr.rotationZ(time/27),
-            tr.uniformScale(0.5)
+            tr.uniformScale(0.1)
         ])
 
         mercurio = sg.findNode(sistemaSolar, "mercurioNode")
         mercurio.transform = tr.matmul([
             tr.rotationZ(time/0.16),
-            tr.uniformScale(0.05)
+            tr.uniformScale(0.1)
         ])
         mercuriotraslacion = sg.findNode(sistemaSolar, "mercurioTranslation")
         mercuriotraslacion.transform = tr.matmul([
             tr.rotationZ(time/58.5),
-            tr.translate(-1, 0, 0)
+            tr.translate(-1.5, 0, 0)
         ])
 
         venus = sg.findNode(sistemaSolar, "venusNode")
         venus.transform = tr.matmul([
             tr.rotationZ(time/243),
-            tr.uniformScale(0.1)
+            tr.uniformScale(0.2)
         ])
         venustraslacion = sg.findNode(sistemaSolar, "venusTranslation")
         venustraslacion.transform = tr.matmul([
             tr.rotationZ(time/224),
-            tr.translate(-1.8, 0, 0)
+            tr.translate(-2.2, 0, 0)
         ])
         
         tierra = sg.findNode(sistemaSolar, "tierraNode")
         tierra.transform = tr.matmul([
             tr.rotationZ(time),
-            tr.uniformScale(0.11)
+            tr.uniformScale(0.22)
 
         ])
         luna = sg.findNode(sistemaSolar, "lunaNode")
         luna.transform = tr.matmul([
             tr.rotationZ(time/29.5),
-            tr.uniformScale(0.04)
+            tr.uniformScale(0.08)
         ])
         lunatraslacion = sg.findNode(sistemaSolar, "lunaTranslation")
         lunatraslacion.transform = tr.matmul([
             tr.rotationZ(time/29.5),
-            tr.translate(0.25, 0, 0)
+            tr.translate(0.5, 0, 0)
         ])
         sistTierraLuna = sg.findNode(sistemaSolar, "sistemaTierraLuna")
         sistTierraLuna.transform = tr.matmul([
             tr.rotationZ(time/365),
-            tr.translate(-2.5, 0, 0)
+            tr.translate(-3, 0, 0)
         ])
 
         marte = sg.findNode(sistemaSolar, "marteNode")
         marte.transform = tr.matmul([
             tr.rotationZ(time),
-            tr.uniformScale(0.1)
+            tr.uniformScale(0.2)
         ])
         martetraslacion = sg.findNode(sistemaSolar, "marteTranslation")
         martetraslacion.transform = tr.matmul([
             tr.rotationZ(time/668),
-            tr.translate(-3.8, 0, 0)
+            tr.translate(-4.5, 0, 0)
         ])
 
         jupiter = sg.findNode(sistemaSolar, "jupiterNode")
         jupiter.transform = tr.matmul([
             tr.rotationZ(2.4 * time),
-            tr.uniformScale(0.26)
+            tr.uniformScale(0.52)
         ])
         jupitertraslacion = sg.findNode(sistemaSolar, "jupiterTranslation")
         jupitertraslacion.transform = tr.matmul([
@@ -670,7 +692,7 @@ def main():
         saturno = sg.findNode(sistemaSolar, "saturnoNode")
         saturno.transform = tr.matmul([
             tr.rotationZ(2.4 * time),
-            tr.uniformScale(0.25)
+            tr.uniformScale(0.5)
         ])
         saturnotraslacion = sg.findNode(sistemaSolar, "sistemaSaturno")
         saturnotraslacion.transform = tr.matmul([
@@ -681,7 +703,7 @@ def main():
         urano = sg.findNode(sistemaSolar, "uranoNode")
         urano.transform = tr.matmul([
             tr.rotationZ(1.4 * time),
-            tr.uniformScale(0.2)
+            tr.uniformScale(0.4)
         ])
         uranotraslacion = sg.findNode(sistemaSolar, "uranoTranslation")
         uranotraslacion.transform = tr.matmul([
@@ -692,7 +714,7 @@ def main():
         neptuno = sg.findNode(sistemaSolar, "neptunoNode")
         neptuno.transform = tr.matmul([
             tr.rotationZ(1.5 * time),
-            tr.uniformScale(0.2)
+            tr.uniformScale(0.4)
         ])
         neptunotraslacion = sg.findNode(sistemaSolar, "neptunoTranslation")
         neptunotraslacion.transform = tr.matmul([
@@ -703,7 +725,7 @@ def main():
         pluton = sg.findNode(sistemaSolar, "plutonNode")
         pluton.transform = tr.matmul([
             tr.rotationZ(time/367),
-            tr.uniformScale(0.04)
+            tr.uniformScale(0.08)
         ])
         plutontraslacion = sg.findNode(sistemaSolar, "plutonTranslation")
         plutontraslacion.transform = tr.matmul([
@@ -716,7 +738,7 @@ def main():
 
 
 
-        sg.drawSceneGraphNode(sistemaSolar, MVPpipeline, "model")
+        #sg.drawSceneGraphNode(sistemaSolar, MVPpipeline, "model")
         sg.drawSceneGraphNode(fondo, MVPpipeline, "model")
         
 
