@@ -13,19 +13,22 @@ from grafica.assets_path import getAssetPath
 class Controller:
     def __init__(self):
         self.camType = 0
-        self.position = np.array([0, -1, 0.1])
+        self.position = np.array([0, -5, 0.5])
         self.theta = 0
         self.phi = 0
         self.front = np.array([0, 1, 0])
+        self.aceleartion = 1
         #doblar  toma valores -1 (izquierda), 0, 1 (derecha)
         self.doblar = 0
         self.view = tr.lookAt(np.array([0, 0, 0]), np.array([0, 0, 0]), np.array([0, 0, 1]))
+        #backflip
+        self.backflip = 0
+        self. backfliped = False
+        #Terminar programa
+        self.close = 0
+        self.closed = False
     def derecha(self):
         self.doblar = 1
-        """ if self.theta < np.pi/2 or self.theta > -np.pi/2:
-            self.phi = self.phi + np.pi/100
-        else:
-            self.phi = self.phi - np.pi/100 """
         self.phi = self.phi + np.pi/100 *np.cos(self.theta)/abs(np.cos(self.theta))
         self.front = np.array([
             np.sin(self.phi)*np.cos(self.theta),
@@ -34,10 +37,6 @@ class Controller:
         ])
     def izquierda(self):
         self.doblar = -1
-        """ if self.theta < np.pi/2 or self.theta > -np.pi/2:
-            self.phi = self.phi - np.pi/100
-        else:
-            self.phi = self.phi + np.pi/100 """
         self.phi = self.phi - np.pi/100 * np.cos(self.theta)/abs(np.cos(self.theta))
         self.front = np.array([
             np.sin(self.phi)*np.cos(self.theta),
@@ -72,27 +71,48 @@ class Controller:
             )
         elif self.camType == 1:
             cX = 4
-            cY = cX*2 
+            cY = cX*2
+            posicionFront = np.array([0.08, -0.05, 0.02]) 
             if time%1600 < 200:
                 posicionAt = np.array([cX, 2-cY*(time%1600)/200, 2])
                 posicionFront = np.array([0.08, -0.05, 0.02])
             elif time%1600 < 800:
                 posicionAt = np.array([cX*np.cos(np.pi*((time%1600)-200)/600), 2-cY-cX*np.sin(np.pi*((time%1600)-200)/600), 2])
-                posicionFront = np.array([0.08*np.cos(np.pi*((time%1600)-200)/600), -0.05 -0.05*np.sin(np.pi*((time%1600)-200)/600), 0.02])
+                #posicionFront = np.array([0.08*np.cos(np.pi*((time%1600)-200)/600), -0.05 -0.05*np.sin(np.pi*((time%1600)-200)/600), 0.02])
             elif time%1600<1000:
                 posicionAt = np.array([-cX, 2-cY +cY*(time%1600-800)/200, 2])
-                posicionFront = np.array([-0.08, -0.05, 0.02])
+                #posicionFront = np.array([-0.08, -0.05, 0.02])
             else:
                 posicionAt = np.array([-cX*np.cos(np.pi*((time%1600)-1000)/600), 2+cX*np.sin(np.pi*((time%1600)-1000)/600), 2])
-                posicionFront = np.array([-0.08*np.cos(np.pi*((time%1600)-1000)/600), -0.05 -0.05*np.sin(np.pi*((time%1600)-200)/600), 0.02])
+                #posicionFront = np.array([-0.08*np.cos(np.pi*((time%1600)-1000)/600), -0.05 -0.05*np.sin(np.pi*((time%1600)-200)/600), 0.02])
 
             self.view = tr.lookAt(
                 posicionAt + posicionFront,
                 posicionAt,
                 np.array([0, 0, 1])
             )
-            
-
+        elif self.camType == 2:
+            Rcometa = (10- 2*np.cos(np.pi*time/250))
+            self.view = tr.lookAt(
+                np.array([Rcometa*np.cos(np.pi*time/250)*1.01, -1.05, Rcometa*np.sin(np.pi*time/250)*1.01]),
+                np.array([0, 0, 0]),
+                np.array([0, 0, 1]),
+            )
+        elif self.camType ==3:
+            #tierra
+            self.view = tr.lookAt(
+                np.array([-4*np.cos(time/365), -4*np.sin(time/365), 0.1]),
+                np.array([0, 0, 0]),
+                np.array([0, 0, 1]),
+            )
+        elif self.camType ==4:
+            #saturno
+            pass
+        #otros planetas con naves
+        elif self.camType ==5:
+            pass
+        elif self.camType ==6:
+            pass
         return self.view
         
 
@@ -116,9 +136,9 @@ def crearEsfera(N, r,g,b):
     for i in range(N):
         indices += [N*n, i*n, ((i+1)*n)%(N*n)]
         rand = random()/8
+        omega = i/N * angulo
         for j in range(n):
             theta = (j+1)/N * angulo
-            omega = i/N * angulo
             vertices += [
                     np.sin(theta)*np.cos(omega), np.sin(theta)*np.sin(omega), np.cos(theta), abs(r-rand), abs(g-rand), abs(b-rand)
                 ]
@@ -151,9 +171,37 @@ def crearAnillo(N, R, r, g, b):
         ]
     return bs.Shape(vertices, indices)
 
+#Funcion crear cometa
+def crearCometa(N, r, g, b):
+    vertices = []
+    indices = []
+    angulo = 2 * np.pi
+    n = int(N/2)-1
+    for i in range(N):
+        indices += [N*n, i*n, ((i+1)*n)%(N*n)]
+        rand = random()/8
+        omega = i/N * angulo
+        for j in range(n):
+            theta = (j+1)/N * angulo*9/16
+            vertices += [
+                    np.sin(theta)*np.cos(omega), np.sin(theta)*np.sin(omega), np.cos(theta), abs(r-rand), abs(g-rand), abs(b-rand)
+                ]
+        for j in range(n-1):
+            indices += [
+                n*i+j, n*i+1+j, (n*(i+1)+j)%(N*n),
+                n*i+1+j, (n*(i+1)+j)%(N*n), (n*(i+1)+1+j)%(N*n),
+            ]
+        indices += [N*n+1, (i*n-1)%(N*n), ((i+1)*n-1)%(N*n)]
+    
+    vertices += [
+        0, 0, 1, r, g, b,
+        0, 0, -4, r, g, b 
+    ] 
+    return bs.Shape(vertices, indices)
+
 #Crear sistema solar scene graph
 def createSystem(pipeline):
-    solShape = createGPUShape(crearEsfera(100, 1, 1, 0), pipeline)
+    estrellaShape = createGPUShape(crearEsfera(100, 1, 1, 0), pipeline)
     mercurioShape = createGPUShape(crearEsfera(100, 0,1,0), pipeline)
     venusShape = createGPUShape(crearEsfera(100, 0,1,1), pipeline)
     tierraShape = createGPUShape(crearEsfera(100, 0,0,1), pipeline)
@@ -161,17 +209,17 @@ def createSystem(pipeline):
     marteShape = createGPUShape(crearEsfera(100, 1,0,0), pipeline)
     jupiterShape = createGPUShape(crearEsfera(100, 1,0,1), pipeline)
     saturnoShape = createGPUShape(crearEsfera(100, 0.5,1,0.5), pipeline)
-    anillo1Shape = createGPUShape(crearAnillo(25, 1, 1, 1, 1), pipeline)
-    anillo2Shape = createGPUShape(crearAnillo(25, 1.15, 0.8, 0.8, 0.8), pipeline)
-    anillo3Shape = createGPUShape(crearAnillo(25, 1.3, 0.6, 0.6, 0.6), pipeline)
+    anillo1Shape = createGPUShape(crearAnillo(100, 1, 1, 1, 1), pipeline)
+    anillo2Shape = createGPUShape(crearAnillo(100, 1.15, 0.8, 0.8, 0.8), pipeline)
+    anillo3Shape = createGPUShape(crearAnillo(100, 1.3, 0.6, 0.6, 0.6), pipeline)
     uranoShape = createGPUShape(crearEsfera(100, 1,0.5,0), pipeline)
     neptunoShape = createGPUShape(crearEsfera(100, 0.5,0.8,0), pipeline)
     plutonShape = createGPUShape(crearEsfera(100, 0.1,0.8,0.5), pipeline)
-    cometaShape = createGPUShape(crearEsfera(100, 136/255, 9/255, 123/255), pipeline)
+    cometaShape = createGPUShape(crearCometa(100, 136/255, 9/255, 123/255), pipeline)
 
     solNode = sg.SceneGraphNode("solNode")
     solNode.transform = tr.uniformScale(1)
-    solNode.childs += [solShape]
+    solNode.childs += [estrellaShape]
 
     mercurioNode = sg.SceneGraphNode("mercurioNode")
     mercurioNode.transform = tr.uniformScale(0.1)
@@ -264,7 +312,7 @@ def createSystem(pipeline):
     cometaNode.transform = tr.uniformScale(0.01)
     cometaNode.childs += [cometaShape]
     cometaTranslation =sg.SceneGraphNode("cometaTranslation")
-    cometaTranslation.transform = tr.translate(0,0,0)
+    cometaTranslation.transform = tr.identity()
     cometaTranslation.childs += [cometaNode]
 
     systemNode = sg.SceneGraphNode("sistemaSolar")
@@ -291,7 +339,7 @@ def createStars(pipeline):
     contador = 0
     estrellas = []
     while contador < 1000:
-        distancia = randint(150, 500)
+        distancia = randint(110, 300)
         theta = random() * np.pi
         omega = (random() - 1)*2 * np.pi
         name = str(contador)
@@ -364,7 +412,19 @@ def createFighter(pipeline):
     ])
     xWingNode.childs += [xWingShape]
 
-    #Rotacion de naves 
+    #convoys
+    earthconvoy = sg.SceneGraphNode("earthConvoy")
+    earthconvoy.transform = tr.translate(0.25, 0, 0)
+    earthconvoy.childs += [kontosNode]
+    earthOrbit = sg.SceneGraphNode("earthOrbit")
+    earthOrbit.transform = tr.identity()
+    earthOrbit.childs += [earthconvoy]
+    earthMove = sg.SceneGraphNode("earthMove")
+    earthMove.transform = tr.translate(0.03, 0, 0)
+    earthMove.childs += [earthOrbit]
+
+
+
 
     #Tie
     tieUVTraslation = sg.SceneGraphNode("tieUVTraslation")
@@ -402,7 +462,7 @@ def createFighter(pipeline):
     usuario.childs += [xWingNode]
 
     sceneNode = sg.SceneGraphNode("naves")
-    sceneNode.childs += [usuario, convoy, kontosNode]
+    sceneNode.childs += [usuario, convoy, earthMove]
 
     return sceneNode
 
@@ -415,12 +475,24 @@ def on_key(window, key, scancode, action, mods):
     global controller
 
     #Cierra la aplicación con escape
-    if key == glfw.KEY_0:
-        controller.camType = 0
-    if key == glfw.KEY_1:
-        controller.camType = 1
-    if key == glfw.KEY_ESCAPE:
-        glfw.set_window_should_close(window, True)
+    if not controller.closed:
+        if key == glfw.KEY_0:
+            controller.camType = 0
+        if key == glfw.KEY_1:
+            controller.camType = 1
+        if key == glfw.KEY_2:
+            controller.camType = 2
+        if key == glfw.KEY_3:
+            controller.camType = 3
+        #Backflip
+        if key == glfw.KEY_E and not controller.backfliped:
+            controller.backfliped = True
+            controller.backflip += 0.001
+        if key == glfw.KEY_Q:
+            controller.backfliped = True
+    
+        if key == glfw.KEY_ESCAPE:
+            controller.closed = True
 
 
 def main():
@@ -477,7 +549,7 @@ def main():
     glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
 
     #Luminocidad
-    glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "lightPosition"), 5, 5, 5)
+    glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "lightPosition"), 0, 0, 0)
     
     glUniform1ui(glGetUniformLocation(pipeline.shaderProgram, "shininess"), 100)
     glUniform1f(glGetUniformLocation(pipeline.shaderProgram, "constantAttenuation"), 0.001)
@@ -496,6 +568,8 @@ def main():
         global controller
         if controller.camType == 0:
             if glfw.get_key(window,glfw.KEY_SPACE) == glfw.PRESS:
+                if controller.aceleartion <= 10:
+                    controller.aceleartion += 0.05
                 if glfw.get_key(window,glfw.KEY_D) == glfw.PRESS:
                     controller.derecha()
                 elif glfw.get_key(window,glfw.KEY_A) == glfw.PRESS:
@@ -504,11 +578,34 @@ def main():
                     controller.arriba()
                 elif glfw.get_key(window,glfw.KEY_S) == glfw.PRESS:
                     controller.abajo()
+                #Modo turbo con left shift
                 if glfw.get_key(window,glfw.KEY_LEFT_SHIFT) == glfw.PRESS:
-                    controller.position = controller.position +controller.front*0.005
+                    controller.position = controller.position +controller.front*0.005*controller.aceleartion
                 else:
-                    controller.position = controller.position +controller.front*0.0005
+                    controller.position = controller.position +controller.front*0.0005*controller.aceleartion
 
+        #Backflip
+        if controller.backfliped:
+            if controller.backflip > 0:
+                controller.backflip += np.pi/25
+                if controller.backflip >= 2*np.pi:
+                    controller.backfliped = False
+                    controller.backflip = 0
+            else:
+                controller.backflip -= np.pi/25
+                if controller.backflip <= -2*np.pi:
+                    controller.backfliped = False
+                    controller.backflip = 0
+
+        #Chekea si hay que cerrar el programa
+        if controller.closed:
+            if controller.camType == 0:
+                controller.position = controller.position +controller.front
+                controller.close += 0.5
+                if controller.close >= 50:
+                    glfw.set_window_should_close(window, True)
+            else:
+                glfw.set_window_should_close(window, True)
 
         view = controller.camera(time)
 
@@ -527,12 +624,33 @@ def main():
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
 
-        #Modelos
+        #traslaciones planeta
+        tierraTransform = tr.matmul([
+            tr.rotationZ(time/365),
+            tr.translate(-3, 0, 0)
+        ])
 
+
+        #Modelos
         
         glUseProgram(pipeline.shaderProgram)
         #Naves
 
+        #convoy tierra
+        earthMove = sg.findNode(figther, "earthMove")
+        earthMove.transform = tierraTransform
+        earthOrbit = sg.findNode(figther, "earthOrbit")
+        earthOrbit.transform =tr.matmul([
+            tr.rotationX(np.pi/10),
+            tr.rotationZ(-time/20)
+        ])
+        earthConvoy = sg.findNode(figther, "earthConvoy")
+        earthConvoy.transform = tr.matmul([
+            tr.translate(0.229, 0, 0),
+            tr.rotationY(np.pi/2)
+        ])
+
+        #Convoy 
         convoy = sg.findNode(figther, "convoy")
         destroyer1 = sg.findNode(figther, "destroyer1")
         destroyer2 = sg.findNode(figther, "destroyer2")
@@ -548,14 +666,14 @@ def main():
                 tr.translate(cX*np.cos(np.pi*((time%1600)-200)/600), 2-cY-cX*np.sin(np.pi*((time%1600)-200)/600), 2),
                 tr.rotationZ(-np.pi*((time%1600)-200)/600)
             ])
-            destroyer1.transform = tr.rotationY(-np.pi/16)
+            destroyer1.transform = tr.rotationY(-np.sin(np.pi*((time%1600)-200)/600)*np.pi/4)
             destroyer2.transform = tr.matmul([
                 tr.translate(-0.05, -0.02, -0.02),
-                tr.rotationY(-np.pi/16)
+                tr.rotationY(-np.sin(np.pi*((time%1600)-200)/600)*np.pi/4)
             ])
             destroyer3.transform = tr.matmul([
                 tr.translate(0.05, -0.02, -0.02),
-                tr.rotationY(-np.pi/16)
+                tr.rotationY(-np.sin(np.pi*((time%1600)-200)/600)*np.pi/4)
             ])    
         elif time%1600<1000:
             convoy.transform = tr.matmul([
@@ -567,18 +685,18 @@ def main():
                 tr.translate(-cX*np.cos(np.pi*((time%1600)-1000)/600), 2+cX*np.sin(np.pi*((time%1600)-1000)/600), 2),
                 tr.rotationZ(-np.pi-np.pi*((time%1600)-1000)/600)
             ])
-            destroyer1.transform = tr.rotationY(-np.pi/16)
+            destroyer1.transform = tr.rotationY(-np.sin(np.pi*((time%1600)-1000)/600)*np.pi/4)
             destroyer2.transform = tr.matmul([
                 tr.translate(-0.05, -0.02, -0.02),
-                tr.rotationY(-np.pi/16)
+                tr.rotationY(-np.sin(np.pi*((time%1600)-1000)/600)*np.pi/4)
             ])
             destroyer3.transform = tr.matmul([
                 tr.translate(0.05, -0.02, -0.02),
-                tr.rotationY(-np.pi/16)
+                tr.rotationY(-np.sin(np.pi*((time%1600)-1000)/600)*np.pi/4)
             ])
 
 
-        sg.drawSceneGraphNode(figther, pipeline, "model")
+        
 
         #nave usuario
         usuarioNave = sg.findNode(figther, "usuario")
@@ -590,7 +708,7 @@ def main():
                     controller.position[2],
                 ),
                 tr.rotationZ(-controller.phi),
-                tr.rotationX(controller.theta),
+                tr.rotationX(controller.theta+controller.backflip),
             ])
         #doblar derecha
         elif controller.doblar == 1:
@@ -601,7 +719,7 @@ def main():
                     controller.position[2],
                 ),
                 tr.rotationZ(-controller.phi),
-                tr.rotationX(controller.theta),
+                tr.rotationX(controller.theta+controller.backflip),
                 tr.rotationY(np.pi/8)
             ])
             controller.doblar = 0
@@ -614,7 +732,7 @@ def main():
                     controller.position[2],
                 ),
                 tr.rotationZ(-controller.phi),
-                tr.rotationX(controller.theta),
+                tr.rotationX(controller.theta+controller.backflip),
                 tr.rotationY(-np.pi/8)
             ])
             controller.doblar = 0
@@ -622,42 +740,45 @@ def main():
        
 
 
-        glUseProgram(MVPpipeline.shaderProgram)
-        glUniformMatrix4fv(glGetUniformLocation(MVPpipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
-        MVPpipeline.drawCall(gpuAxis, GL_LINES)
+        
 
 
         #Sistema Solar
         sol = sg.findNode(sistemaSolar, "solNode")
         sol.transform = tr.matmul([
             tr.rotationZ(time/27),
-            tr.uniformScale(0.1)
+            tr.uniformScale(1)
         ])
 
         mercurio = sg.findNode(sistemaSolar, "mercurioNode")
         mercurio.transform = tr.matmul([
+            tr.rotationX(-0.1*np.pi),
             tr.rotationZ(time/0.16),
             tr.uniformScale(0.1)
         ])
         mercuriotraslacion = sg.findNode(sistemaSolar, "mercurioTranslation")
         mercuriotraslacion.transform = tr.matmul([
+            tr.rotationX(0.05*np.pi),
             tr.rotationZ(time/58.5),
             tr.translate(-1.5, 0, 0)
         ])
 
         venus = sg.findNode(sistemaSolar, "venusNode")
         venus.transform = tr.matmul([
+            tr.rotationX(0.15*np.pi),
             tr.rotationZ(time/243),
             tr.uniformScale(0.2)
         ])
         venustraslacion = sg.findNode(sistemaSolar, "venusTranslation")
         venustraslacion.transform = tr.matmul([
+            tr.rotationX(-0.01*np.pi),
             tr.rotationZ(time/224),
-            tr.translate(-2.2, 0, 0)
+            tr.translate(2.2, 0, 0)
         ])
         
         tierra = sg.findNode(sistemaSolar, "tierraNode")
         tierra.transform = tr.matmul([
+            tr.rotationX(-0.1*np.pi),
             tr.rotationZ(time),
             tr.uniformScale(0.22)
 
@@ -673,86 +794,112 @@ def main():
             tr.translate(0.5, 0, 0)
         ])
         sistTierraLuna = sg.findNode(sistemaSolar, "sistemaTierraLuna")
-        sistTierraLuna.transform = tr.matmul([
-            tr.rotationZ(time/365),
-            tr.translate(-3, 0, 0)
-        ])
+        sistTierraLuna.transform = tierraTransform
 
         marte = sg.findNode(sistemaSolar, "marteNode")
         marte.transform = tr.matmul([
+            tr.rotationX(0.1*np.pi),
             tr.rotationZ(time),
             tr.uniformScale(0.2)
         ])
         martetraslacion = sg.findNode(sistemaSolar, "marteTranslation")
         martetraslacion.transform = tr.matmul([
+            tr.rotationX(0.05*np.pi),
             tr.rotationZ(time/668),
-            tr.translate(-4.5, 0, 0)
+            tr.translate(0, -4.5, 0)
         ])
 
         jupiter = sg.findNode(sistemaSolar, "jupiterNode")
         jupiter.transform = tr.matmul([
+            tr.rotationX(0.2*np.pi),
             tr.rotationZ(2.4 * time),
             tr.uniformScale(0.52)
         ])
         jupitertraslacion = sg.findNode(sistemaSolar, "jupiterTranslation")
         jupitertraslacion.transform = tr.matmul([
+            tr.rotationX(-0.05*np.pi),
             tr.rotationZ(time/3942),
-            tr.translate(-13, 0, 0)
+            tr.translate(0, 13, 0)
         ])
 
         saturno = sg.findNode(sistemaSolar, "saturnoNode")
         saturno.transform = tr.matmul([
+            tr.rotationX(0.1*np.pi),
             tr.rotationZ(2.4 * time),
             tr.uniformScale(0.5)
         ])
         saturnotraslacion = sg.findNode(sistemaSolar, "sistemaSaturno")
         saturnotraslacion.transform = tr.matmul([
+            tr.rotationX(0.01*np.pi),
             tr.rotationZ(time/10767),
-            tr.translate(-23.8, 0, 0)
+            tr.translate(23.8*np.cos(np.pi/4), 23.8*np.sin(np.pi/4), 0)
         ])
 
         urano = sg.findNode(sistemaSolar, "uranoNode")
         urano.transform = tr.matmul([
+            tr.rotationX(-0.15*np.pi),
             tr.rotationZ(1.4 * time),
             tr.uniformScale(0.4)
         ])
         uranotraslacion = sg.findNode(sistemaSolar, "uranoTranslation")
         uranotraslacion.transform = tr.matmul([
+            tr.rotationX(-0.01*np.pi),
             tr.rotationZ(time/30660),
-            tr.translate(-48.7, 0, 0)
+            tr.translate(-48.7*np.cos(np.pi/4), 48.7*np.cos(np.pi/4), 0)
         ])
 
         neptuno = sg.findNode(sistemaSolar, "neptunoNode")
         neptuno.transform = tr.matmul([
+            tr.rotationX(-0.25*np.pi),
             tr.rotationZ(1.5 * time),
             tr.uniformScale(0.4)
         ])
         neptunotraslacion = sg.findNode(sistemaSolar, "neptunoTranslation")
         neptunotraslacion.transform = tr.matmul([
+            tr.rotationX(0.03*np.pi),
             tr.rotationZ(time/60225),
-            tr.translate(-75.1, 0, 0)
+            tr.translate(75.1, 0, 0)
         ])
 
         pluton = sg.findNode(sistemaSolar, "plutonNode")
         pluton.transform = tr.matmul([
+            tr.rotationX(0.1*np.pi),
             tr.rotationZ(time/367),
             tr.uniformScale(0.08)
         ])
         plutontraslacion = sg.findNode(sistemaSolar, "plutonTranslation")
         plutontraslacion.transform = tr.matmul([
+            tr.rotationX(0.02*np.pi),
             tr.rotationZ(time/90520),
-            tr.translate(-98.6, 0, 0)
+            tr.translate(0, 98.6, 0)
         ])
-        
+
+        Rcometa = (10- 2*np.cos(np.pi*time/250))
+        cometaNode = sg.findNode(sistemaSolar, "cometaNode")
+        cometaNode.transform = tr.matmul([
+            tr.rotationY(-np.pi*time/250),
+            tr.rotationZ(time), 
+            tr.uniformScale(0.01)
+        ])
         cometa = sg.findNode(sistemaSolar, "cometaTranslation")
-        cometa.transform = tr.translate((4- 2*np.cos(np.pi*time/10))*np.cos(np.pi*time/10), (4- 2*np.cos(np.pi*time/10))*np.sin(np.pi*time/10), 0)
+        cometa.transform = tr.translate(Rcometa*np.cos(np.pi*time/250), -1, Rcometa*np.sin(np.pi*time/250))
+        
 
 
 
-        #sg.drawSceneGraphNode(sistemaSolar, MVPpipeline, "model")
+        #graficar escena
+        sg.drawSceneGraphNode(figther, pipeline, "model")
+
+
+
+
+        glUseProgram(MVPpipeline.shaderProgram)
+
+        sg.drawSceneGraphNode(sistemaSolar, MVPpipeline, "model")
         sg.drawSceneGraphNode(fondo, MVPpipeline, "model")
         
-
+        glUniformMatrix4fv(glGetUniformLocation(MVPpipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
+        MVPpipeline.drawCall(gpuAxis, GL_LINES)
 
         # Once the drawing is rendered, buffers are swap so an uncomplete drawing is never seen.
         glfw.swap_buffers(window)
