@@ -453,16 +453,28 @@ def createFighter(pipeline):
     convoy.transform = tr.identity()
     convoy.childs += [destroyer1, destroyer2, destroyer3]
 
-    tierraConvoy = sg.SceneGraphNode("tierraConvoy")
-    tierraConvoy.transform = tr.identity()
-    tierraConvoy.childs += [destroyer1, destroyer2, destroyer3]
+    corvette1 = sg.SceneGraphNode("corvette1")
+    corvette1.transform = tr.identity()
+    corvette1.childs += [corvetteNode]
+
+    corvette2 = sg.SceneGraphNode("corvette2")
+    corvette2.transform = tr.translate(-0.04, 0.04, -0.02)
+    corvette2.childs += [corvetteNode]
+
+    corvette3 = sg.SceneGraphNode("corvette3")
+    corvette3.transform = tr.translate(0.04, 0.04, -0.02)
+    corvette3.childs += [corvetteNode]
+
+    convoy2 = sg.SceneGraphNode("convoy2")
+    convoy2.transform = tr.identity()
+    convoy2.childs += [corvette1, corvette2, corvette3]
 
     usuario =sg.SceneGraphNode("usuario")
     usuario.transform = tr.identity()
     usuario.childs += [xWingNode]
 
     sceneNode = sg.SceneGraphNode("naves")
-    sceneNode.childs += [usuario, convoy, earthMove]
+    sceneNode.childs += [usuario, convoy, earthMove, convoy2]
 
     return sceneNode
 
@@ -548,7 +560,6 @@ def main():
     glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "Kd"), 0.9, 0.9, 0.9)
     glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
 
-    #Luminocidad
     glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "lightPosition"), 0, 0, 0)
     
     glUniform1ui(glGetUniformLocation(pipeline.shaderProgram, "shininess"), 100)
@@ -600,9 +611,9 @@ def main():
         #Chekea si hay que cerrar el programa
         if controller.closed:
             if controller.camType == 0:
-                controller.position = controller.position +controller.front
-                controller.close += 0.5
-                if controller.close >= 50:
+                controller.position = controller.position +controller.front*5
+                controller.close += 1
+                if controller.close >= 40:
                     glfw.set_window_should_close(window, True)
             else:
                 glfw.set_window_should_close(window, True)
@@ -694,6 +705,19 @@ def main():
                 tr.translate(0.05, -0.02, -0.02),
                 tr.rotationY(-np.sin(np.pi*((time%1600)-1000)/600)*np.pi/4)
             ])
+
+        #Convoy2
+        convoy2 = sg.findNode(figther, "convoy2")
+        convoy2.transform = tr.matmul([
+            tr.rotationZ(-time/20),
+            tr.translate(1.1, 0, 0)
+        ])
+        corvette = sg.findNode(figther, "corvetteNode")
+        corvette.transform =  tr.matmul([
+            tr.rotationY(np.pi/4),
+            tr.rotationX(np.pi/2),
+            tr.uniformScale(0.05)
+        ])
 
 
         
