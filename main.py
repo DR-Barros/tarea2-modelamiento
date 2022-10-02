@@ -24,6 +24,8 @@ class Controller:
         #backflip
         self.backflip = 0
         self. backfliped = False
+        #camara jupiter
+        self.jupiter = 0
         #Terminar programa
         self.close = 0
         self.closed = False
@@ -92,6 +94,7 @@ class Controller:
                 np.array([0, 0, 1])
             )
         elif self.camType == 2:
+            #cometa
             Rcometa = (10- 2*np.cos(np.pi*time/250))
             self.view = tr.lookAt(
                 np.array([Rcometa*np.cos(np.pi*time/250)*1.01, -1.05, Rcometa*np.sin(np.pi*time/250)*1.01]),
@@ -107,10 +110,18 @@ class Controller:
             )
         elif self.camType ==4:
             #saturno
-            pass
+            self.view = tr.lookAt(
+                np.array([28*np.cos(time/10767+np.pi/4), 28*np.sin(time/10767+np.pi/4), 0.8795*np.cos(time/10767)+0.3]),
+                np.array([0, 0, 0]),
+                np.array([0, 0, 1]),
+            )
         #otros planetas con naves
         elif self.camType ==5:
-            pass
+            self.view = tr.lookAt(
+                np.array([(15-self.jupiter*1.5)*np.cos(time/3942+np.pi/2), (15-self.jupiter*1.5)*np.sin(time/3942+np.pi/2), -2.3465*np.cos(time/3942)+0.4*(1-self.jupiter*0.5)]),
+                np.array([0, 0, 0]),
+                np.array([0, 0, 1]),
+            )
         elif self.camType ==6:
             pass
         return self.view
@@ -266,26 +277,20 @@ def createSystem(pipeline):
     saturnoNode.transform = tr.uniformScale(0.50)
     saturnoNode.childs += [saturnoShape]
     anillo1Node = sg.SceneGraphNode("anillo1Node")
-    anillo1Node.transform = tr.matmul([
-        tr.rotationX(0.1 * np.pi),
-        tr.uniformScale(0.54)
-    ])
+    anillo1Node.transform = tr.uniformScale(0.54)
     anillo1Node.childs += [anillo1Shape]
     anillo2Node = sg.SceneGraphNode("anillo2Node")
-    anillo2Node.transform = tr.matmul([
-        tr.rotationX(0.1 * np.pi),
-        tr.uniformScale(0.54)
-    ])
+    anillo2Node.transform = tr.uniformScale(0.54)
     anillo2Node.childs += [anillo2Shape]
     anillo3Node = sg.SceneGraphNode("anillo3Node")
-    anillo3Node.transform = tr.matmul([
-        tr.rotationX(0.1 * np.pi),
-        tr.uniformScale(0.54)
-    ])
+    anillo3Node.transform = tr.uniformScale(0.54)
     anillo3Node.childs += [anillo3Shape]
+    anillosNode =sg.SceneGraphNode("anillosNode")
+    anillosNode.transform = tr.identity()
+    anillosNode.childs += [anillo1Node, anillo2Node, anillo3Node]
     sistemaSaturno = sg.SceneGraphNode("sistemaSaturno")
     sistemaSaturno.transform = tr.translate(-23.8, 0, 0)
-    sistemaSaturno.childs += [saturnoNode, anillo1Node, anillo2Node, anillo3Node]
+    sistemaSaturno.childs += [saturnoNode, anillosNode]
 
     uranoNode = sg.SceneGraphNode("uranoNode")
     uranoNode.transform = tr.uniformScale(0.4)
@@ -334,7 +339,7 @@ def createSystem(pipeline):
 
 #Crear fondo de estrellas
 def createStars(pipeline):
-    estrellasShape = createGPUShape(crearEsfera(100, 1, 1, 0), pipeline)
+    estrellasShape = createGPUShape(crearEsfera(25, 1, 1, 0), pipeline)
     sceneNode = sg.SceneGraphNode("fondo")
     contador = 0
     estrellas = []
@@ -420,10 +425,35 @@ def createFighter(pipeline):
     earthOrbit.transform = tr.identity()
     earthOrbit.childs += [earthconvoy]
     earthMove = sg.SceneGraphNode("earthMove")
-    earthMove.transform = tr.translate(0.03, 0, 0)
+    earthMove.transform =tr.identity()
     earthMove.childs += [earthOrbit]
 
 
+    jupiterconvoy = sg.SceneGraphNode("jupiterConvoy")
+    jupiterconvoy.transform = tr.translate(0.53, 0, 0)
+    navesJupiter= []
+    contador = 0
+    while contador < 50:
+        posX = random()
+        posY = random()
+        posZ = random()
+        num = str(contador)
+        navesJupiter += [sg.SceneGraphNode(num+"Xwing")]
+        navesJupiter += [sg.SceneGraphNode(num+"Tie")]
+        navesJupiter[2*contador].transform = tr.translate(0.3*(posX-0.5), 0.3*posY, 0.05*posZ)
+        navesJupiter[2*contador+1].transform = tr.translate(0.3*(posX-0.5), -0.3*posY, 0.05*posZ)
+        navesJupiter[2*contador].childs += [tieUVNode]
+        navesJupiter[2*contador+1].childs += [xWingNode]
+        jupiterconvoy.childs += [navesJupiter[2*contador], navesJupiter[2*contador+1]]
+        contador += 1
+    jupiterOrbit = sg.SceneGraphNode("jupiterOrbit")
+    jupiterOrbit.transform = tr.identity()
+    jupiterOrbit.childs += [jupiterconvoy]
+    jupiterMove = sg.SceneGraphNode("jupiterMove")
+    jupiterMove.transform = tr.identity()
+    jupiterMove.childs += [jupiterOrbit]
+
+    
 
 
     #Tie
@@ -474,7 +504,7 @@ def createFighter(pipeline):
     usuario.childs += [xWingNode]
 
     sceneNode = sg.SceneGraphNode("naves")
-    sceneNode.childs += [usuario, convoy, earthMove, convoy2]
+    sceneNode.childs += [usuario, convoy, earthMove, convoy2, jupiterMove]
 
     return sceneNode
 
@@ -496,6 +526,10 @@ def on_key(window, key, scancode, action, mods):
             controller.camType = 2
         if key == glfw.KEY_3:
             controller.camType = 3
+        if key == glfw.KEY_4:
+            controller.camType = 4
+        if key == glfw.KEY_5:
+            controller.camType = 5
         #Backflip
         if key == glfw.KEY_E and not controller.backfliped:
             controller.backfliped = True
@@ -556,7 +590,7 @@ def main():
     glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "Ld"), 1.0, 1.0, 1.0)
     glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "Ls"), 1.0, 1.0, 1.0)
 
-    glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "Ka"), 0.2, 0.2, 0.2)
+    glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "Ka"), 0.5, 0.5, 0.5)
     glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "Kd"), 0.9, 0.9, 0.9)
     glUniform3f(glGetUniformLocation(pipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
 
@@ -594,6 +628,15 @@ def main():
                     controller.position = controller.position +controller.front*0.005*controller.aceleartion
                 else:
                     controller.position = controller.position +controller.front*0.0005*controller.aceleartion
+        elif controller.camType == 5:
+            if glfw.get_key(window,glfw.KEY_W) == glfw.PRESS:
+                controller.jupiter += 0.05
+                if controller.jupiter > 1:
+                    controller.jupiter = 1
+            elif glfw.get_key(window,glfw.KEY_S) == glfw.PRESS:
+                controller.jupiter -= 0.05
+                if controller.jupiter < 0:
+                    controller.jupiter = 0
 
         #Backflip
         if controller.backfliped:
@@ -640,6 +683,11 @@ def main():
             tr.rotationZ(time/365),
             tr.translate(-3, 0, 0)
         ])
+        jupiterTransform = tr.matmul([
+            tr.rotationX(-0.05*np.pi),
+            tr.rotationZ(time/3942),
+            tr.translate(0, 13, 0)
+        ])
 
 
         #Modelos
@@ -660,6 +708,18 @@ def main():
             tr.translate(0.229, 0, 0),
             tr.rotationY(np.pi/2)
         ])
+
+        #Convoy tierra
+        jupiterMove = sg.findNode(figther, "jupiterMove")
+        jupiterMove.transform = jupiterTransform
+        jupiterOrbit = sg.findNode(figther, "jupiterOrbit")
+        jupiterOrbit.transform =tr.matmul([tr.rotationZ(time/40)])
+        jupiterConvoy = sg.findNode(figther, "jupiterConvoy")
+        jupiterConvoy.transform = tr.matmul([
+            tr.translate(0.53, 0, 0),
+            tr.rotationY(np.pi/2)
+        ])
+
 
         #Convoy 
         convoy = sg.findNode(figther, "convoy")
@@ -719,13 +779,59 @@ def main():
             tr.uniformScale(0.05)
         ])
 
-
+        #Convoy3
+        N=4
+        C3time = 2000/(4*N-2)
+        if time%2000 < C3time*(N-2):
+            covoy3Transform = tr.translate((N-2)*(time%2000)/(C3time*(N-2))-N/2+1, N/2, 0)
+        elif time%2000 < C3time*(N-0.5):
+            covoy3Transform = tr.translate(
+                N/2-1 + np.cos(np.pi*(time%2000-C3time*(N-2))/3), 
+                N/2 - np.sin(np.pi*(time%2000-C3time*(N-2))/3), 
+                0
+            )
+        elif time%2000 < C3time*(2*N-2.5):
+            covoy3Transform = tr.translate(
+                N/2, 
+                N/2-1-(N-2)*(time%2000-C3time*(N-0.5))/(C3time*(N-2)), 
+                0
+            )
+        elif time%2000 < C3time*(2*N-1):
+            covoy3Transform = tr.translate(
+                N/2 - np.cos(np.pi*(time%2000-C3time*(2*N-2.5))/3), 
+                -N/2 +1 - np.sin(np.pi*(time%2000-C3time*(2*N-2.5))/3),  
+                0
+            )
+        elif time%2000 < C3time*(3*N-3):
+            covoy3Transform = tr.translate(
+                N/2-1-(N-2)*(time%2000-C3time*(2*N-1))/(C3time*(N-2)), 
+                -N/2, 
+                0
+            )
+        elif time%2000 < C3time*(3*N-1.5):
+            covoy3Transform = tr.translate(
+                -N/2 +1 + np.cos(np.pi*(time%2000-C3time*(3*N-3))/3), 
+                -N/2 + np.sin(np.pi*(time%2000-C3time*(3*N-3))/3), 
+                0
+            )
+        elif time%2000 < C3time*(4*N-3.5):
+            covoy3Transform = tr.translate(
+                -N/2,
+                -N/2+1+(N-2)*(time%2000-C3time*(3*N-1.5))/(C3time*(N-2)), 
+                0
+            )
+        elif time%2000 < C3time*(4*N-2):
+            covoy3Transform = tr.translate(
+                -N/2 +1 - np.cos(np.pi*(time%2000-C3time*(4*N-3.5))/3), 
+                N/2 - np.sin(np.pi*(time%2000-C3time*(4*N-3.5))/3), 
+                0
+            )
         
 
         #nave usuario
         usuarioNave = sg.findNode(figther, "usuario")
         if controller.doblar == 0:
-            usuarioNave.transform = tr.matmul([
+            usuarioTransform = tr.matmul([
                 tr.translate(
                     controller.position[0],
                     controller.position[1],
@@ -736,7 +842,7 @@ def main():
             ])
         #doblar derecha
         elif controller.doblar == 1:
-            usuarioNave.transform = tr.matmul([
+            usuarioTransform = tr.matmul([
                 tr.translate(
                     controller.position[0],
                     controller.position[1],
@@ -749,7 +855,7 @@ def main():
             controller.doblar = 0
         #doblar izquierda
         else:
-            usuarioNave.transform = tr.matmul([
+            usuarioTransform = tr.matmul([
                 tr.translate(
                     controller.position[0],
                     controller.position[1],
@@ -760,8 +866,7 @@ def main():
                 tr.rotationY(-np.pi/8)
             ])
             controller.doblar = 0
-
-       
+        usuarioNave.transform = usuarioTransform
 
 
         
@@ -840,11 +945,7 @@ def main():
             tr.uniformScale(0.52)
         ])
         jupitertraslacion = sg.findNode(sistemaSolar, "jupiterTranslation")
-        jupitertraslacion.transform = tr.matmul([
-            tr.rotationX(-0.05*np.pi),
-            tr.rotationZ(time/3942),
-            tr.translate(0, 13, 0)
-        ])
+        jupitertraslacion.transform = jupiterTransform
 
         saturno = sg.findNode(sistemaSolar, "saturnoNode")
         saturno.transform = tr.matmul([
@@ -852,6 +953,12 @@ def main():
             tr.rotationZ(2.4 * time),
             tr.uniformScale(0.5)
         ])
+        anillos= sg.findNode(sistemaSolar, "anillosNode")
+        anillos.transform = tr.matmul([
+            tr.rotationX(-0.1*np.pi),
+            tr.rotationZ(2 * time),
+        ])
+
         saturnotraslacion = sg.findNode(sistemaSolar, "sistemaSaturno")
         saturnotraslacion.transform = tr.matmul([
             tr.rotationX(0.01*np.pi),
